@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class BankService {
@@ -31,5 +33,16 @@ public class BankService {
 
     public Client getClientByAccountId (String accountId) {
         return clients.stream().filter(c->c.getAccountId().equals(accountId)).findFirst().orElse(null);
+    }
+
+    public Map<BankAccount, Client> getClients (List<BankAccount> accounts) {
+        return accounts.stream()
+                .collect(Collectors.toMap(
+                        account -> account, // Key Mapper
+                        account -> clients.stream()
+                                .filter(c -> c.getId().equals(account.getClientId()))
+                                .findFirst()
+                                .orElse(null) // Value Mapper
+                ));
     }
 }
