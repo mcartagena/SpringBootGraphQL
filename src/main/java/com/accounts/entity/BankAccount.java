@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,7 +21,13 @@ public class BankAccount {
     @Column
     private Currency currency;
     @Column
+    private String country;
+    @Column
     private Float balance;
     @Column
     private String status;
+    @Column
+    private Float transferLimit;
+    @Column
+    private LocalDateTime accountCreateDate;
 }

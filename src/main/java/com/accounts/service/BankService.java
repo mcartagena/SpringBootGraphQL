@@ -22,11 +22,11 @@ public class BankService {
     BankAccountRepository bankAccountRepository;
 
     private static final List<Client> clients = Arrays.asList(
-            new Client(100L,  "John", "T.", "Doe"),
-            new Client(101L, "Emma", "B.", "Smith"),
-            new Client(102L, "James", "R.", "Brown"),
-            new Client(103L, "Olivia", "S.", "Johnson"),
-            new Client(104L, "William", "K.", "Jones")
+            new Client(100L,  "John", "T.", "Doe", "US"),
+            new Client(101L, "Emma", "B.", "Smith", "CA"),
+            new Client(102L, "James", "R.", "Brown", "IN"),
+            new Client(103L, "Olivia", "S.", "Johnson", "UK"),
+            new Client(104L, "William", "K.", "Jones", "SG")
     );
 
     public void save(BankAccount bankAccount){
