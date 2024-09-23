@@ -1,48 +1,99 @@
 package com.accounts.service;
 
-import com.accounts.domain.BankAccount;
 import com.accounts.domain.Client;
 import com.accounts.domain.Currency;
+import com.accounts.entity.BankAccount;
+import com.accounts.exceptions.AccountNotFoundException;
+import com.accounts.exceptions.ClientNotFoundException;
+import com.accounts.repository.BankAccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class BankService {
-    private static final List<BankAccount> bankAccounts = Arrays.asList(
-            new BankAccount("A100", "C100", Currency.USD, 106.00f, "A"),
-            new BankAccount("A101", "C200", Currency.CAD, 250.00f, "A"),
-            new BankAccount("A102", "C300", Currency.CAD, 333.00f, "I"),
-            new BankAccount("A103", "C400", Currency.EUR, 4000.00f, "A"),
-            new BankAccount("A104", "C500", Currency.EUR, 4000.00f, "A")
-    );
+
+    @Autowired
+    BankAccountRepository bankAccountRepository;
+
     private static final List<Client> clients = Arrays.asList(
-            new Client("C100", "A100", "Elena", "Maria", "Gonzalez"),
-            new Client("C200", "A101", "James", "Robert", "Smith"),
-            new Client("C300", "A102", "Aarav", "Kumar", "Patel"),
-            new Client("C400", "A103", "Linh", "Thi", "Nguyen"),
-            new Client("C500", "A104", "Olivia", "Grace", "Johnson")
+            new Client(100L,  "John", "T.", "Doe"),
+            new Client(101L, "Emma", "B.", "Smith"),
+            new Client(102L, "James", "R.", "Brown"),
+            new Client(103L, "Olivia", "S.", "Johnson"),
+            new Client(104L, "William", "K.", "Jones")
     );
+
+    public void save(BankAccount bankAccount){
+        if(validClient(bankAccount)){
+            bankAccountRepository.save(bankAccount);
+        } else {
+            throw new ClientNotFoundException("Client Not Found");
+        }
+    }
+
+    public BankAccount modify(BankAccount bankAccount){
+        if(validClient(bankAccount)){
+            return bankAccountRepository.save(bankAccount);
+        } else {
+            throw new ClientNotFoundException("Client Not Found");
+        }
+    }
 
     public List<BankAccount> getAccounts() {
-        return bankAccounts;
+        return bankAccountRepository.findAll();
     }
 
-    public Client getClientByAccountId (String accountId) {
-        return clients.stream().filter(c->c.getAccountId().equals(accountId)).findFirst().orElse(null);
+    public BankAccount accountById(Long accountId) {
+        if (bankAccountRepository.findById(accountId).isPresent()) {
+            return bankAccountRepository.findById(accountId).get();
+        }
+        throw new AccountNotFoundException("Account Not Found");
     }
 
-    public Map<BankAccount, Client> getClients (List<BankAccount> accounts) {
-        return accounts.stream()
+    public Boolean delete(Long accountId){
+        if(bankAccountRepository.findById(accountId).isPresent()){
+            bankAccountRepository.delete(
+                    bankAccountRepository.findById(accountId).get()
+            );
+            return  true;
+        }
+        return false;
+    }
+
+    private List<Client> getClients () {
+        return clients;
+    }
+
+    public Map<BankAccount, Client> getClients (List<BankAccount> bankAccounts) {
+        // Collect all client IDs from the list of bank accounts
+        Set<Long> clientIds = bankAccounts.stream()
+                .map(BankAccount::getClientId)
+                .collect(Collectors.toSet());
+
+        // Fetch client for all collected IDs
+        List<Client> clients = getClients().stream()
+                .filter(client -> clientIds.contains(client.getId()))
+                .collect(Collectors.toList());
+
+        // Map each bank account to its corresponding client
+        return clients.stream()
                 .collect(Collectors.toMap(
-                        account -> account, // Key Mapper
-                        account -> clients.stream()
-                                .filter(c -> c.getId().equals(account.getClientId()))
+                        client -> bankAccounts.stream()
+                                .filter(bankAccount -> bankAccount.getClientId().equals(client.getId()))
                                 .findFirst()
-                                .orElse(null) // Value Mapper
+                                .orElse(null),
+                        client -> client
                 ));
+    }
+
+    private boolean validClient(BankAccount account) {
+        return getClients ().stream()
+                .filter(client -> client.getId().equals(account.getClientId())).findAny().isPresent();
     }
 }
