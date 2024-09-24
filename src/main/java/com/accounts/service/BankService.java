@@ -45,8 +45,8 @@ public class BankService {
         }
     }
 
-    public List<BankAccount> getAccounts() {
-        return bankAccountRepository.findAll();
+    public List<BankAccount> getAccounts(String accountStatus) {
+        return bankAccountRepository.findByStatus(accountStatus);
     }
 
     public BankAccount accountById(Long accountId) {
