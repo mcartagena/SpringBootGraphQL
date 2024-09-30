@@ -1,75 +1,61 @@
 package com.accounts.controller;
 
-import com.accounts.domain.Client;
-import com.accounts.entity.BankAccount;
+import com.accounts.entity.DepositAccount;
 import com.accounts.exceptions.ClientNotFoundException;
-import com.accounts.service.BankService;
-import org.springframework.graphql.execution.ErrorType;
+import com.accounts.service.DepositService;
 import graphql.GraphQLError;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.graphql.data.method.annotation.*;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.GraphQlExceptionHandler;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @Slf4j
 public class AccountsController {
+
     @Autowired
-    BankService bankService;
+    DepositService depositService;
 
     @QueryMapping
-    List<BankAccount> accounts(@ContextValue String accountStatus) {
-        log.info("Getting Accounts for status: {}", accountStatus);
-        return bankService.getAccounts(accountStatus);
+    public List<DepositAccount> getAllAccounts() {
+        log.info("Getting Accounts ");
+        return depositService.getAccounts();
     }
 
     @QueryMapping
-    BankAccount accountById(@Argument ("accountId") Long accountId){
-        return bankService.accountById(accountId);
-    }
-
-    /*
-    @SchemaMapping(typeName="BankAccount", field = "client")
-    Client getClient(BankAccount account){
-        log.info("Getting client for {}", account.getId());
-        return bankService.getClientByAccountId(account.getId());
-    }
-     */
-
-    /** Get clients without N + 1 problem **/
-    @BatchMapping( field = "client", typeName = "BankAccountType")
-    Map<BankAccount, Client> getClient(List<BankAccount> accounts) {
-        log.info("Getting client for Accounts : {}", accounts.size());
-
-        return bankService.getClients(accounts);
+    public DepositAccount getAccountById(@Argument("accountID") String accountID) {
+        log.info("Getting Account ");
+        return depositService.accountById(accountID);
     }
 
     @MutationMapping
-    Boolean addAccount (@Argument("account") BankAccount account)  {
-        log.info("Saving Account : {}", account);
-        bankService.save(account);
-        return true;
+    public Boolean addAccount(@Argument("account") DepositAccount account) {
+        log.info("Saving Account : " + account);
+        return depositService.save(account);
     }
 
     @MutationMapping
-    BankAccount editAccount (@Argument("account") BankAccount account) {
-        log.info("Editing Account : {}", account);
-        return bankService.modify(account);
+    public DepositAccount editAccount(@Argument("account") DepositAccount account) {
+        log.info("Editing Account : " + account);
+        return depositService.modify(account);
     }
 
     @MutationMapping
-    Boolean deleteAccount (@Argument("id") Long accountId) {
-        log.info("Deleting Account : {}", accountId);
-        return bankService.delete(accountId);
+    public Boolean deleteAccount(@Argument("accountID") String accountID) {
+        log.info("Deleting Account : " + accountID);
+        return depositService.delete(accountID);
     }
 
     @GraphQlExceptionHandler
-    public GraphQLError handle(@NonNull ClientNotFoundException ex, @NonNull DataFetchingEnvironment environment){
+    public GraphQLError handle(@NonNull ClientNotFoundException ex, @NonNull DataFetchingEnvironment environment) {
         return GraphQLError.newError().errorType(ErrorType.BAD_REQUEST)
                 .message("Unable to locate the specified client. " +
                         "Please verify the client details and attempt your request again. : " +
